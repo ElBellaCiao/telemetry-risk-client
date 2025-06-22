@@ -29,7 +29,7 @@ impl RiskClient {
                 "{}/{}/{}",
                 self.base_url,
                 config::RISK_ENDPOINT,
-                message.risk_type()
+                message.risk_type().as_ref()
             );
 
             let risk_report = RiskReport {
