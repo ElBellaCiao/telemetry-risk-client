@@ -1,5 +1,10 @@
-mod constant;
-mod error_report;
+use serde::{Deserialize, Serialize};
 
-pub use constant::RISK_ENDPOINT;
-pub use error_report::ErrorReport;
+mod unstructured;
+
+pub use unstructured::*;
+
+#[derive(Debug, Deserialize, Serialize)]
+pub enum RiskReport {
+    Unstructured(UnstructuredReport),
+}

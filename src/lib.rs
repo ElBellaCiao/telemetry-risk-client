@@ -1,4 +1,5 @@
 mod client;
+mod config;
 mod model;
 mod service;
 

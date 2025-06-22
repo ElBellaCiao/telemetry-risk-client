@@ -1,6 +1,5 @@
-use crate::client;
-use crate::model::ErrorReport;
 use crate::service::risk_client::RiskClient;
+use crate::{UnstructuredReport, client, model::RiskReport};
 use anyhow::Result;
 use chrono::Utc;
 use std::thread;
@@ -11,7 +10,7 @@ use tracing_subscriber::Layer;
 use tracing_subscriber::layer::Context;
 
 pub struct RiskLayer {
-    queue: kanal::Sender<ErrorReport>,
+    queue: kanal::Sender<RiskReport>,
     thread_handle: Option<thread::JoinHandle<()>>,
 }
 
@@ -55,12 +54,13 @@ where
 
             let metadata = _event.metadata();
 
-            let error_report = ErrorReport {
+            let error_report = RiskReport::Unstructured(UnstructuredReport {
+                resource_id: "dummy_resource".to_string(),
                 message: visitor.message,
                 file: metadata.file().map(|s| s.to_string()),
                 line: metadata.line(),
                 timestamp: Utc::now(),
-            };
+            });
 
             let _ = self.queue.send(error_report);
         }
