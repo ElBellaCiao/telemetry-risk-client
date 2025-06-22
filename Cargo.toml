@@ -13,6 +13,9 @@ anyhow = "1"
 chrono = { version = "0", features = ["serde"] }
 serde = { version = "1", features = ["derive"] }
 
+# == Macros ==
+strum = { version = "0", features = ["derive"] }
+
 # === Queue ===
 kanal = "0"
 
