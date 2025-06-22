@@ -1,7 +1,6 @@
 use crate::service::risk_client::RiskClient;
-use crate::{UnstructuredReport, client, model::RiskReport};
+use crate::{Unstructured, client, model::RiskInfo};
 use anyhow::Result;
-use chrono::Utc;
 use std::thread;
 use std::time::Duration;
 use tracing::field::Visit;
@@ -10,7 +9,7 @@ use tracing_subscriber::Layer;
 use tracing_subscriber::layer::Context;
 
 pub struct RiskLayer {
-    queue: kanal::Sender<RiskReport>,
+    queue: kanal::Sender<RiskInfo>,
     thread_handle: Option<thread::JoinHandle<()>>,
 }
 
@@ -23,8 +22,10 @@ impl RiskLayer {
             .timeout(Duration::from_secs(5))
             .pool_max_idle_per_host(1)
             .build()?;
-        let api_client = client::HttpSyncClient::new(reqwest_client);
-        let risk_client = RiskClient::new(api_client, rx, base_url.to_string());
+        let api_client = client::HttpSyncClient::new(reqwest_client.clone());
+        let metadata_client = client::InstanceMetadataClient::new(reqwest_client)?;
+        let mut risk_client =
+            RiskClient::new(api_client, metadata_client, rx, base_url.to_string());
 
         let handle = thread::spawn(move || risk_client.run());
 
@@ -54,12 +55,10 @@ where
 
             let metadata = _event.metadata();
 
-            let error_report = RiskReport::Unstructured(UnstructuredReport {
-                resource_id: "dummy_resource".to_string(),
+            let error_report = RiskInfo::Unstructured(Unstructured {
                 message: visitor.message,
                 file: metadata.file().map(|s| s.to_string()),
                 line: metadata.line(),
-                timestamp: Utc::now(),
             });
 
             let _ = self.queue.send(error_report);
