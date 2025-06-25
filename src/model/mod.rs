@@ -7,10 +7,9 @@ mod unstructured;
 pub use unstructured::*;
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct RiskReport {
+pub struct Metadata {
     pub resource_id: Option<String>,
     pub timestamp: DateTime<Utc>,
-    pub risk_info: RiskInfo,
 }
 
 #[derive(Debug, Deserialize, Serialize, AsRefStr)]

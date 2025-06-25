@@ -9,7 +9,7 @@ impl HttpSyncClient {
         Self { client }
     }
 
-    pub fn send(&self, url: &str, body: impl Serialize) {
-        let _ = self.client.post(url).json(&body).send();
+    pub fn send(&self, url: &str, body: &impl Serialize, query: &impl Serialize) {
+        let _ = self.client.post(url).query(query).json(body).send();
     }
 }

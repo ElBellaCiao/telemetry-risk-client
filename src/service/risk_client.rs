@@ -1,4 +1,5 @@
-use crate::{RiskReport, client, config, model::RiskInfo};
+use crate::model::{Metadata, RiskInfo};
+use crate::{client, config};
 use chrono::Utc;
 
 pub struct RiskClient {
@@ -25,15 +26,13 @@ impl RiskClient {
 
     pub fn run(&mut self) {
         let url = format!("{}/{}", self.base_url, config::RISK_ENDPOINT);
+        let metadata = Metadata {
+            resource_id: self.metadata_client.get_self_id().ok(),
+            timestamp: Utc::now(),
+        };
 
         while let Ok(message) = self.queue.recv() {
-            let risk_report = RiskReport {
-                timestamp: Utc::now(),
-                resource_id: self.metadata_client.get_self_id().ok(),
-                risk_info: message,
-            };
-
-            self.http_client.send(&url, risk_report);
+            self.http_client.send(&url, &message, &metadata);
         }
     }
 }
