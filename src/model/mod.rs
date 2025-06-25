@@ -1,6 +1,6 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use strum::{AsRefStr, EnumString};
+use strum::AsRefStr;
 
 mod unstructured;
 
@@ -13,21 +13,8 @@ pub struct RiskReport {
     pub risk_info: RiskInfo,
 }
 
-#[derive(Debug, EnumString, AsRefStr)]
+#[derive(Debug, Deserialize, Serialize, AsRefStr)]
 #[strum(serialize_all = "lowercase")]
-pub enum RiskType {
-    Unstructured,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
 pub enum RiskInfo {
     Unstructured(Unstructured),
-}
-
-impl RiskInfo {
-    pub fn risk_type(&self) -> RiskType {
-        match self {
-            RiskInfo::Unstructured(_) => RiskType::Unstructured,
-        }
-    }
 }

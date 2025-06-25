@@ -24,14 +24,9 @@ impl RiskClient {
     }
 
     pub fn run(&mut self) {
-        while let Ok(message) = self.queue.recv() {
-            let url = format!(
-                "{}/{}/{}",
-                self.base_url,
-                config::RISK_ENDPOINT,
-                message.risk_type().as_ref()
-            );
+        let url = format!("{}/{}", self.base_url, config::RISK_ENDPOINT);
 
+        while let Ok(message) = self.queue.recv() {
             let risk_report = RiskReport {
                 timestamp: Utc::now(),
                 resource_id: self.metadata_client.get_self_id().ok(),
