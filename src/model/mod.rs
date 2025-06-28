@@ -7,7 +7,7 @@ pub use unstructured::*;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Metadata {
-    pub resource_id: Option<String>,
+    pub resource_id: String,
     pub timestamp: DateTime<Utc>,
 }
 

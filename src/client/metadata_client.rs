@@ -8,6 +8,7 @@ pub struct InstanceMetadataClient {
     token: String,
 }
 
+/// Token refresh logic is not necessary anymore, since we grab the values at initialization only
 impl InstanceMetadataClient {
     const TTL: Duration = Duration::from_secs(6 * 60 * 60); // 6 hours
     const REFRESH_BUFFER: Duration = Duration::from_secs(30 * 60); // 30 min

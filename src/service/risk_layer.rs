@@ -23,9 +23,11 @@ impl RiskLayer {
             .pool_max_idle_per_host(1)
             .build()?;
         let api_client = client::HttpSyncClient::new(reqwest_client.clone());
-        let metadata_client = client::InstanceMetadataClient::new(reqwest_client)?;
-        let mut risk_client =
-            RiskClient::new(api_client, metadata_client, rx, base_url.to_string());
+        let mut metadata_client = client::InstanceMetadataClient::new(reqwest_client)?;
+
+        let instance_id = metadata_client.get_self_id()?;
+
+        let risk_client = RiskClient::new(api_client, rx, base_url.to_string(), instance_id);
 
         let handle = thread::spawn(move || risk_client.run());
 
