@@ -15,20 +15,19 @@ pub struct RiskLayer {
 
 impl RiskLayer {
     pub fn new(base_url: &str) -> Result<Self> {
-        let (tx, rx) = kanal::unbounded();
-
         // todo: Expose Key Settings Only
         let reqwest_client = reqwest::blocking::Client::builder()
             .timeout(Duration::from_secs(5))
             .pool_max_idle_per_host(1)
             .build()?;
-        let api_client = client::HttpSyncClient::new(reqwest_client.clone());
-        let mut metadata_client = client::InstanceMetadataClient::new(reqwest_client)?;
 
+        let api_client = client::HttpSyncClient::new(reqwest_client.clone());
+
+        let mut metadata_client = client::InstanceMetadataClient::new(reqwest_client)?;
         let instance_id = metadata_client.get_self_id()?;
 
+        let (tx, rx) = kanal::unbounded();
         let risk_client = RiskClient::new(api_client, rx, base_url.to_string(), instance_id);
-
         let handle = thread::spawn(move || risk_client.run());
 
         Ok(Self {
