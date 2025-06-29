@@ -1,8 +1,6 @@
-use crate::service::risk_client::RiskClient;
-use crate::{Unstructured, client, model::RiskInfo};
+use crate::{Unstructured, model::RiskInfo};
 use anyhow::Result;
 use std::thread;
-use std::time::Duration;
 use tracing::field::Visit;
 use tracing::{Event, Subscriber};
 use tracing_subscriber::Layer;
@@ -14,31 +12,20 @@ pub struct RiskLayer {
 }
 
 impl RiskLayer {
-    pub fn new(base_url: &str) -> Result<Self> {
-        // todo: Expose Key Settings Only
-        let reqwest_client = reqwest::blocking::Client::builder()
-            .timeout(Duration::from_secs(5))
-            .pool_max_idle_per_host(1)
-            .build()?;
-
-        let api_client = client::HttpSyncClient::new(reqwest_client.clone());
-
-        let mut metadata_client = client::InstanceMetadataClient::new(reqwest_client)?;
-        let instance_id = metadata_client.get_self_id()?;
-
-        let (tx, rx) = kanal::unbounded();
-        let risk_client = RiskClient::new(api_client, rx, base_url.to_string(), instance_id);
-        let handle = thread::spawn(move || risk_client.run());
-
+    pub fn new(
+        tx: kanal::Sender<RiskInfo>,
+        handler: Option<thread::JoinHandle<()>>,
+    ) -> Result<Self> {
         Ok(Self {
             queue: tx,
-            thread_handle: Some(handle),
+            thread_handle: handler,
         })
     }
 }
 
 impl Drop for RiskLayer {
     fn drop(&mut self) {
+        let _ = self.queue.close();
         if let Some(handle) = self.thread_handle.take() {
             let _ = handle.join();
         }
@@ -49,12 +36,12 @@ impl<S> Layer<S> for RiskLayer
 where
     S: Subscriber,
 {
-    fn on_event(&self, _event: &Event<'_>, _ctx: Context<'_, S>) {
-        if *_event.metadata().level() == tracing::Level::ERROR {
+    fn on_event(&self, event: &Event<'_>, _ctx: Context<'_, S>) {
+        if event.metadata().level() == &tracing::Level::ERROR {
             let mut visitor = MessageVisitor::default();
-            _event.record(&mut visitor);
+            event.record(&mut visitor);
 
-            let metadata = _event.metadata();
+            let metadata = event.metadata();
 
             let error_report = RiskInfo::Unstructured(Unstructured {
                 message: visitor.message,

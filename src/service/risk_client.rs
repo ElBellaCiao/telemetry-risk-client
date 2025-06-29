@@ -1,38 +1,37 @@
+use crate::client;
 use crate::model::{Metadata, RiskInfo};
-use crate::{client, config};
 use chrono::Utc;
 
 pub struct RiskClient {
     http_client: client::HttpSyncClient,
     instance_id: String,
     queue: kanal::Receiver<RiskInfo>,
-    base_url: String,
+    url: String,
 }
 
 impl RiskClient {
     pub fn new(
         http_client: client::HttpSyncClient,
         queue: kanal::Receiver<RiskInfo>,
-        base_url: String,
-        instance_id: String,
+        url: &str,
+        instance_id: &str,
     ) -> Self {
         Self {
             http_client,
             queue,
-            base_url,
-            instance_id,
+            url: url.to_owned(),
+            instance_id: instance_id.to_owned(),
         }
     }
 
     pub fn run(&self) {
-        let url = format!("{}/{}", self.base_url, config::RISK_ENDPOINT);
         let metadata = Metadata {
             resource_id: self.instance_id.clone(),
             timestamp: Utc::now(),
         };
 
         while let Ok(message) = self.queue.recv() {
-            self.http_client.send(&url, &message, &metadata);
+            self.http_client.send(&self.url, &message, &metadata);
         }
     }
 }

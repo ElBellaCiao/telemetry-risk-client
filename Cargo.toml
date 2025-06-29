@@ -8,6 +8,7 @@ edition = "2024"
 tracing = "0"
 tracing-subscriber = "0"
 anyhow = "1"
+tokio = { version = "1.0", features = ["rt-multi-thread"] }
 
 # == Utilities ==
 chrono = { version = "0", features = ["serde"] }
@@ -21,3 +22,6 @@ kanal = "0"
 
 # == Http ==
 reqwest = { version = "0", features = ["json", "blocking"]}
+
+# === Custom Libraries ===
+cloud-util = {git = "https://github.com/ElBellaCiao/cloud-util.git", features = ["config-store"], rev = "b2544265642eacd9f0cd5c7dd8ecb0cd217093c4" }
