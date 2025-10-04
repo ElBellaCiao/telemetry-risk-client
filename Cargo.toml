@@ -18,6 +18,3 @@ kanal = "0"
 
 # == Http ==
 reqwest = { version = "0", features = ["json", "blocking"]}
-
-# === Custom Libraries ===
-cloud-util = {git = "https://github.com/ElBellaCiao/cloud-util.git", features = ["config-store"], rev = "702b01227ab06cbadda3724e2259e56755634095" }
